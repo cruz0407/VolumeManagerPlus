@@ -4,8 +4,9 @@ import android.graphics.Bitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.espresso.Espresso
-import java.io.File
-import java.io.FileOutputStream
+import android.content.ContentValues
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.compose.runtime.*
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
@@ -34,7 +35,14 @@ class TvVolumeScreenTest {
         }
         compose.onNodeWithTag("app-xiaoai").assertIsSelected()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        FileOutputStream(File(context.getExternalFilesDir(null), "tv-remote-preview.png")).use {
+        // Public test media survives Gradle uninstalling the app at the end of the suite.
+        val preview = requireNotNull(context.contentResolver.insert(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "tv-remote-preview.png")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/VolumeManagerTV")
+            }))
+        requireNotNull(context.contentResolver.openOutputStream(preview)).use {
             compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
         }
         compose.onNodeWithTag("tv-root").performKeyInput { pressKey(Key.DirectionLeft) }

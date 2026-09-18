@@ -95,7 +95,7 @@ jobs:
             adb shell wm density 240
             ./gradlew --no-daemon :app:connectedTvDebugAndroidTest
             mkdir -p ui-preview
-            adb pull /sdcard/Android/data/moe.DDOne.volume.tv/files/tv-remote-preview.png ui-preview/
+            adb pull /sdcard/Pictures/VolumeManagerTV/tv-remote-preview.png ui-preview/
       - name: Upload UI checks and preview
         if: always()
         uses: actions/upload-artifact@v7
