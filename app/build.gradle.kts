@@ -51,6 +51,19 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions += "device"
+    productFlavors {
+        create("mobile") {
+            dimension = "device"
+            buildConfigField("boolean", "TV_MODE", "false")
+        }
+        create("tv") {
+            dimension = "device"
+            applicationIdSuffix = ".tv"
+            versionNameSuffix = "-tv.1"
+            buildConfigField("boolean", "TV_MODE", "true")
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true

@@ -80,6 +80,8 @@ import moe.chensi.volume.compose.BubbleSettingsCard
 import moe.chensi.volume.compose.CrashReportDialog
 import moe.chensi.volume.compose.SystemVolumePanel
 import moe.chensi.volume.compose.ToggleButton
+import moe.chensi.volume.tv.TvDevice
+import moe.chensi.volume.tv.TvVolumeRoute
 import moe.chensi.volume.ui.theme.VolumeManagerTheme
 import org.joor.Reflect
 import rikka.shizuku.Shizuku
@@ -199,6 +201,18 @@ class MainActivity : ComponentActivity() {
         checkBatteryOptimization()
 
         setContent {
+            if (TvDevice.isTelevision(this@MainActivity) ||
+                intent.component?.className?.endsWith("TvLauncher") == true) {
+                VolumeManagerTheme(darkTheme = true, dynamicColor = false) {
+                    TvVolumeRoute(manager) {
+                        grantSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)
+                        val serviceName = ComponentName(this@MainActivity, Service::class.java).flattenToString()
+                        enableAccessibilityService(serviceName)
+                        disableAccessibilityShortcuts(serviceName)
+                    }
+                }
+                return@setContent
+            }
             var showAll by remember { mutableStateOf(false) }
             var crashReport by remember { mutableStateOf<String?>(null) }
             var showAboutDialog by remember { mutableStateOf(false) }

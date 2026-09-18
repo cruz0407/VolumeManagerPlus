@@ -1,3 +1,9 @@
+# TV remote adaptation
+
+本 fork 增加电视遥控器操作与 GitHub Actions APK 构建。请先阅读 [电视版说明](README-TV.md)。
+
+---
+
 # Volume Manager
 
 [<img src="https://img.shields.io/f-droid/v/moe.chensi.volume?baseUrl=https://apt.izzysoft.de/fdroid&label=IzzyOnDroid" alt="IzzyOnDroid">](https://apt.izzysoft.de/fdroid/index/apk/moe.chensi.volume)

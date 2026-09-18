@@ -419,6 +419,8 @@ class Service : AccessibilityService() {
     }
 
     private fun showBubble() {
+        // TV uses the full remote UI; never present a touch-only bubble over a TV app.
+        if (moe.chensi.volume.tv.TvDevice.isTelevision(this)) return
         if (overlayVisible) {
             startOverlayIdleTimer()
             return
