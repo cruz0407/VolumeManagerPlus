@@ -14,6 +14,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
+@OptIn(ExperimentalTestApi::class)
 class TvVolumeScreenTest {
     @get:Rule val compose = createComposeRule()
 
@@ -85,4 +86,3 @@ class TvVolumeScreenTest {
         compose.onNodeWithTag("app-app25").assertIsDisplayed().assertIsSelected()
     }
 }
-
