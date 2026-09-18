@@ -80,6 +80,16 @@ fun TvVolumeRoute(manager: Manager, enableBackgroundService: () -> Unit) {
                 message = "无法打开 Shizuku：${e.message ?: e.javaClass.simpleName}"
             }
         },
+        onVolumeAdjust = { id, direction ->
+            try {
+                if (connected) manager.apps[id]?.let { app ->
+                    // Read the live model for every repeat, not a composition-time UI snapshot.
+                    app.volume = TvRemoteControls.adjust(app.volume, direction)
+                }
+            } catch (e: Exception) {
+                message = "调整失败：${e.message ?: e.javaClass.simpleName}"
+            }
+        },
         onEnableBackground = {
             if (connected) enableService() else message = "请先启动并授权 Shizuku。"
         }

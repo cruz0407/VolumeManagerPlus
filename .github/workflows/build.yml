@@ -17,15 +17,15 @@ concurrency:
 jobs:
   build:
     name: Test and build TV APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - name: Restore TV test signing key
         env:
           TV_DEBUG_KEYSTORE_BASE64: ${{ secrets.TV_DEBUG_KEYSTORE_BASE64 }}
@@ -48,7 +48,7 @@ jobs:
           sha256sum dist/Volume-Manager-TV.apk > dist/SHA256SUMS.txt
           echo '### TV APK ready' >> "$GITHUB_STEP_SUMMARY"
           echo 'Download **Volume-Manager-TV** from Artifacts below, unzip and install the APK. Android 13+ and Shizuku are required.' >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Volume-Manager-TV
           path: dist/
@@ -56,7 +56,7 @@ jobs:
           retention-days: 30
       - name: Upload checks
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TV-build-reports
           path: |
@@ -67,15 +67,15 @@ jobs:
 
   remote-ui-tests:
     name: D-pad UI tests on Android emulator
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -98,7 +98,7 @@ jobs:
             adb pull /sdcard/Android/data/moe.DDOne.volume.tv/files/tv-remote-preview.png ui-preview/
       - name: Upload UI checks and preview
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TV-remote-UI-checks
           path: |

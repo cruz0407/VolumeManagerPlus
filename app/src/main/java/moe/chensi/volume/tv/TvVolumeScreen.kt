@@ -58,7 +58,8 @@ fun TvVolumeScreen(
     onVolumeChange: (String, Float) -> Unit,
     onRequestPermission: () -> Unit,
     onOpenShizuku: () -> Unit,
-    onEnableBackground: () -> Unit
+    onEnableBackground: () -> Unit,
+    onVolumeAdjust: (String, Int) -> Unit
 ) {
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var initiallySelected by rememberSaveable { mutableStateOf(false) }
@@ -66,7 +67,6 @@ fun TvVolumeScreen(
     var menuIndex by rememberSaveable { mutableIntStateOf(0) }
     val focus = remember { FocusRequester() }
     val listState = rememberLazyListState()
-    val selectedApp = apps.firstOrNull { it.id == selectedId }
     val settings = menu == "settings"
     val menuApp = apps.firstOrNull { it.id == menu }
     val options = if (settings) listOf("请求 Shizuku 授权", "打开 Shizuku", "重新启用后台服务", "返回应用列表")
@@ -90,7 +90,7 @@ fun TvVolumeScreen(
 
     fun openMenu(id: String) { menuIndex = 0; menu = id }
     fun activateOption(index: Int) {
-        if (settings) {
+        if (menu == "settings") {
             when (index) {
                 0 -> onRequestPermission()
                 1 -> onOpenShizuku()
@@ -98,8 +98,9 @@ fun TvVolumeScreen(
                 else -> menu = null
             }
         } else {
-            if (index < 3 && menuApp != null) {
-                onVolumeChange(menuApp.id, listOf(0f, .3f, 1f)[index])
+            val currentApp = apps.firstOrNull { it.id == menu }
+            if (index < 3 && currentApp != null) {
+                onVolumeChange(currentApp.id, listOf(0f, .3f, 1f)[index])
             }
             menu = null
         }
@@ -114,6 +115,7 @@ fun TvVolumeScreen(
             }
             return
         }
+        val selectedApp = apps.firstOrNull { it.id == selectedId }
         when (action) {
             TvRemoteAction.UP, TvRemoteAction.DOWN -> {
                 // Position 0 is the setup header; the app list starts at position 1.
@@ -123,8 +125,7 @@ fun TvVolumeScreen(
             }
             TvRemoteAction.LEFT, TvRemoteAction.RIGHT -> {
                 if (connected && selectedApp != null) {
-                    onVolumeChange(selectedApp.id, TvRemoteControls.adjust(selectedApp.volume,
-                        if (action == TvRemoteAction.LEFT) -1 else 1))
+                    onVolumeAdjust(selectedApp.id, if (action == TvRemoteAction.LEFT) -1 else 1)
                 }
             }
             TvRemoteAction.CONFIRM -> openMenu(selectedApp?.id ?: "settings")
@@ -198,7 +199,9 @@ fun TvVolumeScreen(
             Text("↑↓ 选择应用     ←→ 调整 5%     确认 更多操作     返回 关闭菜单", color = Foreground, fontSize = 15.sp)
         }
         if (menu != null) {
-            Box(Modifier.fillMaxSize().background(Background.copy(alpha = .97f)), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().background(Background.copy(alpha = .97f))
+                .pointerInput(Unit) { detectTapGestures(onTap = { /* Block clicks behind this modal. */ }) },
+                contentAlignment = Alignment.Center) {
                 Column(Modifier.widthIn(max = 620.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(if (settings) "设置与权限" else menuApp?.name.orEmpty(), color = Foreground,
                         fontSize = 26.sp, fontWeight = FontWeight.Bold)

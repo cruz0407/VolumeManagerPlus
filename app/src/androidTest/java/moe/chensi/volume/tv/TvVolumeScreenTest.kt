@@ -26,7 +26,10 @@ class TvVolumeScreenTest {
                 listOf(TvAppItem("xiaoai", "小爱同学", first), TvAppItem("video", "视频", second)),
                 true, "Shizuku 已连接", "测试", { id, volume ->
                     if (id == "xiaoai") first = volume else second = volume
-                }, {}, {}, {}
+                }, {}, {}, {}, { id, direction ->
+                    if (id == "xiaoai") first = TvRemoteControls.adjust(first, direction)
+                    else second = TvRemoteControls.adjust(second, direction)
+                }
             )
         }
         compose.onNodeWithTag("app-xiaoai").assertIsSelected()
@@ -52,7 +55,7 @@ class TvVolumeScreenTest {
         var opens = 0
         compose.setContent {
             TvVolumeScreen(emptyList(), false, "未连接", "请授权", { _, _ -> },
-                { requests++ }, { opens++ }, {})
+                { requests++ }, { opens++ }, {}, { _, _ -> })
         }
         compose.onNodeWithTag("tv-root").performKeyInput { pressKey(Key.DirectionCenter) }
         compose.onNodeWithTag("tv-root").performKeyInput { pressKey(Key.DirectionCenter) }
@@ -65,7 +68,7 @@ class TvVolumeScreenTest {
     @Test fun backClosesMenuWithoutLeavingApp() {
         compose.setContent {
             TvVolumeScreen(listOf(TvAppItem("xiaoai", "小爱同学", .5f)), true, "已连接", "",
-                { _, _ -> }, {}, {}, {})
+                { _, _ -> }, {}, {}, {}, { _, _ -> })
         }
         compose.onNodeWithTag("tv-root").performKeyInput { pressKey(Key.DirectionCenter) }
         compose.onNodeWithTag("menu-0").assertIsDisplayed()
@@ -74,10 +77,44 @@ class TvVolumeScreenTest {
         compose.onNodeWithTag("app-xiaoai").assertIsSelected()
     }
 
+    @Test fun burstOfKeysUsesCurrentSelectionAndCurrentVolume() {
+        var first by mutableFloatStateOf(.5f)
+        var second by mutableFloatStateOf(.5f)
+        compose.setContent {
+            TvVolumeScreen(listOf(TvAppItem("first", "第一项", first), TvAppItem("second", "第二项", second)),
+                true, "已连接", "", { _, _ -> }, {}, {}, {}, { id, direction ->
+                    if (id == "first") first = TvRemoteControls.adjust(first, direction)
+                    else second = TvRemoteControls.adjust(second, direction)
+                })
+        }
+        compose.onNodeWithTag("tv-root").performKeyInput {
+            pressKey(Key.DirectionDown)
+            repeat(4) { pressKey(Key.DirectionRight) }
+        }
+        compose.runOnIdle {
+            assertEquals(.5f, first, .0001f)
+            assertEquals(.7f, second, .0001f)
+        }
+    }
+
+    @Test fun menuBackdropBlocksHiddenRows() {
+        compose.setContent {
+            TvVolumeScreen(listOf(TvAppItem("first", "第一项", .5f)), true, "已连接", "",
+                { _, _ -> }, {}, {}, {}, { _, _ -> })
+        }
+        compose.onNodeWithTag("tv-root").performKeyInput { pressKey(Key.DirectionUp) }
+        compose.onNodeWithTag("tv-root").performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.onNodeWithTag("menu-0").assertIsSelected()
+        compose.onNodeWithTag("app-first").performTouchInput {
+            click(androidx.compose.ui.geometry.Offset(5f, height / 2f))
+        }
+        compose.onNodeWithText("请求 Shizuku 授权").assertIsDisplayed()
+    }
+
     @Test fun scrollingKeepsSelectionVisible() {
         compose.setContent {
             TvVolumeScreen((0..39).map { TvAppItem("app$it", "应用 $it", 1f) },
-                true, "已连接", "", { _, _ -> }, {}, {}, {})
+                true, "已连接", "", { _, _ -> }, {}, {}, {}, { _, _ -> })
         }
         repeat(25) {
             compose.onNodeWithTag("tv-root").performKeyInput { pressKey(Key.DirectionDown) }
